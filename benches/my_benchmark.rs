@@ -2,17 +2,17 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use fast_powi::*;
 use num_bigint::BigInt;
 use num_complex::Complex;
-use num_rational::Ratio;
-use num_traits::{Pow, Zero};
+use num_rational::{BigRational, Ratio};
+use num_traits::Pow;
 use std::hint::black_box;
 
 fn criterion_benchmark(c: &mut Criterion) {
     let bases: [f64; 3] = [0.3, -0.7, 1.4];
     let big_bases = [BigInt::from(3), BigInt::from(-7), BigInt::from(14)];
     let little_bases: [u64; 2] = [2, 3];
-    let ratio_bases: [Ratio<BigInt>; 3] =
+    let ratio_bases: [BigRational; 3] =
         big_bases.clone().map(|n| Ratio::new(n, BigInt::from(10)));
-    let complex_bases: [Complex<Ratio<BigInt>>; 3] = [
+    let complex_bases: [Complex<BigRational>; 3] = [
         Complex::new(ratio_bases[0].clone(), ratio_bases[1].clone()),
         Complex::new(ratio_bases[1].clone(), ratio_bases[2].clone()),
         Complex::new(ratio_bases[2].clone(), ratio_bases[0].clone()),
@@ -25,7 +25,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             let mut sum = 0.0;
             for base in bases {
                 for exp in exps.clone() {
-                    sum += black_box(base).pow_i8(black_box(exp));
+                    sum += black_box(base).powi8(black_box(exp));
                 }
             }
             sum
@@ -55,10 +55,10 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
     c.bench_function("bigint_fast", |b| {
         b.iter(|| {
-            let mut sum = BigInt::from(0);
+            let mut sum = BigInt::ZERO;
             for base in &big_bases {
                 for exp in big_exps.clone() {
-                    sum += black_box(base).pow_u8(black_box(exp));
+                    sum += black_box(base).powu8(black_box(exp));
                 }
             }
             sum
@@ -66,7 +66,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
     c.bench_function("bigint_num", |b| {
         b.iter(|| {
-            let mut sum = BigInt::from(0);
+            let mut sum = BigInt::ZERO;
             for base in &big_bases {
                 for exp in big_exps.clone() {
                     sum += black_box(base).pow(black_box(exp as u32));
@@ -75,20 +75,20 @@ fn criterion_benchmark(c: &mut Criterion) {
             sum
         })
     });
-    c.bench_function("ratio_fast", |b| {
+    c.bench_function("big_ratio_fast", |b| {
         b.iter(|| {
-            let mut sum = BigInt::zero();
+            let mut sum = BigInt::ZERO;
             for base in &ratio_bases {
                 for exp in exps.clone() {
-                    sum += black_box(base).pow_i8(black_box(exp)).numer();
+                    sum += black_box(base).powi8(black_box(exp)).numer();
                 }
             }
             sum
         })
     });
-    c.bench_function("ratio_num", |b| {
+    c.bench_function("big_ratio_num", |b| {
         b.iter(|| {
-            let mut sum = BigInt::zero();
+            let mut sum = BigInt::ZERO;
             for base in &ratio_bases {
                 for exp in exps.clone() {
                     sum += black_box(base).pow(black_box(exp as i32)).numer();
@@ -102,7 +102,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             let mut sum = 0;
             for base in &little_bases {
                 for exp in little_exps.clone() {
-                    sum += black_box(base).pow_u8(black_box(exp));
+                    sum += black_box(base).powu8(black_box(exp));
                 }
             }
             sum
@@ -119,20 +119,20 @@ fn criterion_benchmark(c: &mut Criterion) {
             sum
         })
     });
-    c.bench_function("complex_fast", |b| {
+    c.bench_function("big_complex_ratio_fast", |b| {
         b.iter(|| {
-            let mut sum = BigInt::zero();
+            let mut sum = BigInt::ZERO;
             for base in &complex_bases {
                 for exp in exps.clone() {
-                    sum += black_box(base).pow_i8(black_box(exp)).re.numer();
+                    sum += black_box(base).powi8(black_box(exp)).re.numer();
                 }
             }
             sum
         })
     });
-    c.bench_function("complex_num", |b| {
+    c.bench_function("big_complex_ratio_num", |b| {
         b.iter(|| {
-            let mut sum = BigInt::zero();
+            let mut sum = BigInt::ZERO;
             for base in &complex_bases {
                 for exp in exps.clone() {
                     sum += black_box(base).pow(black_box(exp as i32)).re.numer();

@@ -1,10 +1,10 @@
 
 macro_rules! sq {
-    ($e:expr) => {crate::PowU8::sq($e)};
+    ($e:expr) => {crate::Square::sq($e)};
 }
 
 macro_rules! cb {
-    ($e:expr) => {crate::PowU8::cb($e)};
+    ($e:expr) => {crate::Cube::cb($e)};
 }
 
 macro_rules! pow {
@@ -29,7 +29,7 @@ macro_rules! pow {
     ($n:ident^18) => {sq!(pow!($n^9))};
     ($n:ident^19) => {$n * pow!($n^18)};
     ($n:ident^20) => {sq!(pow!($n^10))};
-    ($n:ident^21) => {$n * pow!($n^20)};
+    ($n:ident^21) => {cb!(pow!($n^7))};
     ($n:ident^22) => {sq!(pow!($n^11))};
     ($n:ident^23) => {{
         let n2 = $n * $n ;
@@ -75,7 +75,7 @@ macro_rules! pow {
     ($n:ident^54) => {sq!(pow!($n^27))};
     ($n:ident^55) => {$n * pow!($n^54)};
     ($n:ident^56) => {sq!(pow!($n^28))};
-    ($n:ident^57) => {$n * pow!($n^56)};
+    ($n:ident^57) => {cb!(pow!($n^19))};
     ($n:ident^58) => {sq!(pow!($n^29))};
     ($n:ident^59) => {{
         let n3 = cb!($n);
@@ -92,7 +92,7 @@ macro_rules! pow {
     ($n:ident^66) => {sq!(pow!($n^33))};
     ($n:ident^67) => {$n * pow!($n^66)};
     ($n:ident^68) => {sq!(pow!($n^34))};
-    ($n:ident^69) => {$n * pow!($n^68)};
+    ($n:ident^69) => {cb!(pow!($n^23))};
     ($n:ident^70) => {sq!(pow!($n^35))};
     ($n:ident^71) => {$n * pow!($n^70)};
     ($n:ident^72) => {sq!(pow!($n^36))};
@@ -113,7 +113,7 @@ macro_rules! pow {
     ($n:ident^78) => {sq!(pow!($n^39))};
     ($n:ident^79) => {$n * pow!($n^78)};
     ($n:ident^80) => {sq!(pow!($n^40))};
-    ($n:ident^81) => {$n * pow!($n^80)};
+    ($n:ident^81) => {cb!(pow!($n^27))};
     ($n:ident^82) => {sq!(pow!($n^41))};
     ($n:ident^83) => {{
         let n2 = $n * $n ;

@@ -1,5 +1,10 @@
 [package]
+categories = ["algorithms", "mathematics"]
+description = "Provides fast exponentiation for numeric types"
+keywords = ["math", "fast", "powi", "power"]
+license = "MIT"
 name = "fast-powi"
+readme = "README.md"
 version = "0.1.0"
 edition = "2024"
 
