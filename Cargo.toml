@@ -6,8 +6,9 @@ license = "MIT"
 name = "fast-powi"
 readme = "README.md"
 repository = "https://github.com/mikem8891/fast-powi"
+rust-version = "1.56"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [lib]
 
