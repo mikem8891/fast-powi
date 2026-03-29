@@ -6,6 +6,18 @@
 //! `Square` and `Cube` traits are also provided for further optimization of
 //! types that can be squared and cubed more efficiently than by repeated
 //! multiplication, such as for complex numbers.
+//! 
+//! # Example
+//! ```rust
+//! use fast_powi::PowI8;
+//! use num_complex::Complex;
+//! use num_rational::Ratio;
+//! use num_traits::ConstOne;
+//! 
+//! const ONE: Complex<Ratio<i32>> = ConstOne::ONE;
+//! let a = Complex::new(Ratio::new(3, 5), Ratio::new(4, 5));
+//! assert_eq!(a.powi8(-5), ONE / (a * a * a * a * a));
+//! ```
 
 use num_bigint::{BigInt, BigUint};
 use num_complex::Complex;
@@ -59,6 +71,8 @@ pub trait Cube: Mul + Sized {
 /// This trait provides a `powu8` function that is faster than what is provided
 /// in the Rust standard library or in `num_traits::Pow`. Since `powu8` only
 /// accepts a `u8` exponent, the range of exponents is limited to `0..=255`.
+/// Similar to `powi` in the Rust standard library, `powu8` returns 1 for
+/// exponents of 0, even though 0⁰ is undefined.
 ///
 /// # Example
 /// ```
@@ -69,7 +83,7 @@ pub trait Cube: Mul + Sized {
 /// let a = Complex::new(Ratio::new(3, 5), Ratio::new(4, 5));
 /// assert_eq!(a.powu8(5), a * a * a * a * a);
 /// ```
-pub trait PowU8: Square {
+pub trait PowU8: Mul + Sized {
     /// Raises `self` to the power of `exp`.
     fn powu8(self, exp: u8) -> <Self as Mul>::Output;
 }
@@ -79,6 +93,8 @@ pub trait PowU8: Square {
 /// This trait provides a `powi8` function that is faster than what is provided
 /// in the Rust standard library or in `num_traits::Pow`. Since `powi8` only
 /// accepts an `i8` exponent, the range of exponents is limited to `-128..=127`.
+/// Similar to `powi` in the Rust standard library, `powi8` returns 1 for
+/// exponents of 0, even though 0⁰ is undefined.
 /// 
 /// # Example
 /// ```
