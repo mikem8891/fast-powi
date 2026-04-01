@@ -1,14 +1,14 @@
 [package]
-categories = ["algorithms", "mathematics"]
-description = "Provides fast exponentiation for numeric types"
-keywords = ["math", "fast", "powi", "power"]
-license = "MIT"
 name = "fast-powi"
-readme = "README.md"
+version = "0.1.1"
+categories = ["algorithms", "mathematics", "no-std"]
+description = "Provides fast exponentiation for numeric types"
 repository = "https://github.com/mikem8891/fast-powi"
-rust-version = "1.56"
-version = "0.1.0"
+keywords = ["math", "fast", "powi", "num"]
+license = "MIT"
+readme = "README.md"
 edition = "2021"
+rust-version = "1.82"
 
 [lib]
 
@@ -17,15 +17,14 @@ no-deps = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
-num-bigint = "0.4.6"
-num-complex = "0.4.6"
-num-integer = "0.1.46"
-num-rational = "0.4.2"
-num-traits = "0.2.19"
+num-bigint = { version = "0.4", default-features = false, optional = true }
+num-complex = { version = "0.4", default-features = false, optional = true }
+num-rational = { version = "0.4", default-features = false, optional = true }
+num-traits = { version = "0.2", default-features = false }
 
-[dev-dependencies]
-criterion = { version = "0.5", features = ["html_reports"] }
-
-[[bench]]
-name = "my_benchmark"
-harness = false
+[features]
+default = []
+num = ["big-int", "complex", "ratio"]
+big-int = ["dep:num-bigint"]
+complex = ["dep:num-complex"]
+ratio = ["dep:num-rational"]

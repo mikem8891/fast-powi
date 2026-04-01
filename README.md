@@ -13,3 +13,7 @@ const ONE: Complex<Ratio<i32>> = ConstOne::ONE;
 let a = Complex::new(Ratio::new(3, 5), Ratio::new(4, 5));
 assert_eq!(a.powi8(-5), ONE / (a * a * a * a * a));
 ```
+
+# Features
+
+This crate does not use the standard library; i.e., it is `no_std`.  By default `fast-powi` supports numeric primatives.  Through features, `fast-powi` supports `num` crate numeric types. The features for the individual `num` crate numeric types are `big-int`, `complex`, and `ratio`. The feature `num` is for all the `num` crate numeric types.
