@@ -6,31 +6,41 @@
 //! `Square` and `Cube` traits are also provided for further optimization of
 //! types that can be squared and cubed more efficiently than by repeated
 //! multiplication, such as for complex numbers.
-//! 
+//!
 //! # Example
 //! ```rust
 //! use fast_powi::PowI8;
 //! use num_complex::Complex;
 //! use num_rational::Ratio;
 //! use num_traits::ConstOne;
-//! 
+//!
 //! const ONE: Complex<Ratio<i32>> = ConstOne::ONE;
 //! let a = Complex::new(Ratio::new(3, 5), Ratio::new(4, 5));
 //! assert_eq!(a.powi8(-5), ONE / (a * a * a * a * a));
 //! ```
+//!
+//! # Features
+//!
+//! This crate does not use the standard library; i.e., it is `no_std`.  By
+//! default `fast-powi` supports numeric primatives.  Through features,
+//! `fast-powi` supports `num` crate numeric types. The features for the
+//! individual `num` crate numeric types are `big-int`, `complex`, and `ratio`.
+//! The feature `num` is for all the `num` crate numeric types.
+//!
 
+#![no_std]
+
+use core::ops::Mul;
+#[cfg(feature = "big-int")]
 use num_bigint::{BigInt, BigUint};
-use num_complex::Complex;
-use num_rational::Ratio;
 use num_traits::Inv;
-use std::ops::Mul;
 
 #[macro_use]
 mod macros;
 
 /// Trait for squaring `self`.
 ///
-/// This trait provides a squaring function that is at least as efficient 
+/// This trait provides a squaring function that is at least as efficient
 /// as repeated multiplication.
 ///
 /// # Example
@@ -49,7 +59,7 @@ pub trait Square: Mul + Sized {
 
 /// Trait for cubing `self`.
 ///
-/// This trait provides a cubing function that is at least as efficient 
+/// This trait provides a cubing function that is at least as efficient
 /// as repeated multiplication.
 ///
 /// # Example
@@ -67,7 +77,7 @@ pub trait Cube: Mul + Sized {
 }
 
 /// Trait for raising `self` to the power of a `u8`.
-/// 
+///
 /// This trait provides a `powu8` function that is faster than what is provided
 /// in the Rust standard library or in `num_traits::Pow`. Since `powu8` only
 /// accepts a `u8` exponent, the range of exponents is limited to `0..=255`.
@@ -95,7 +105,7 @@ pub trait PowU8: Mul + Sized {
 /// accepts an `i8` exponent, the range of exponents is limited to `-128..=127`.
 /// Similar to `powi` in the Rust standard library, `powi8` returns 1 for
 /// exponents of 0, even though 0⁰ is undefined.
-/// 
+///
 /// # Example
 /// ```
 /// use fast_powi::PowI8;
@@ -123,6 +133,7 @@ macro_rules! forward_ref_pow {
     };
 }
 
+#[cfg(feature = "big-int")]
 macro_rules! forward_owned_pow {
     (impl $imp:ident, $method:ident($($arg:ident: $arg_ty:ty),*) for $b:ty) => {
         impl $imp for $b {
@@ -185,8 +196,11 @@ macro_rules! impl_powu8_for {
     };
 }
 
+#[cfg(feature = "big-int")]
 impl_powu8_for!(BigInt);
+#[cfg(feature = "big-int")]
 impl_powu8_for!(BigUint);
+
 impl_powu8_for!(f32: Copy);
 impl_powu8_for!(f64: Copy);
 impl_powu8_for!(i8: Copy);
@@ -224,6 +238,7 @@ macro_rules! impl_powi8_for {
 impl_powi8_for!(f32: Copy);
 impl_powi8_for!(f64: Copy);
 
+#[cfg(feature = "ratio")]
 macro_rules! impl_pow_for_ratio {
     ($t: ty: Copy) => {
         impl Square for Ratio<$t> {
@@ -293,18 +308,26 @@ macro_rules! impl_pow_for_ratio {
     };
 }
 
-impl_pow_for_ratio!(i8: Copy);
-impl_pow_for_ratio!(i16: Copy);
-impl_pow_for_ratio!(i32: Copy);
-impl_pow_for_ratio!(i64: Copy);
-impl_pow_for_ratio!(u8: Copy);
-impl_pow_for_ratio!(u16: Copy);
-impl_pow_for_ratio!(u32: Copy);
-impl_pow_for_ratio!(u64: Copy);
+#[cfg(feature = "ratio")]
+mod ratio {
+    use super::*;
+    use num_rational::Ratio;
+    impl_pow_for_ratio!(i8: Copy);
+    impl_pow_for_ratio!(i16: Copy);
+    impl_pow_for_ratio!(i32: Copy);
+    impl_pow_for_ratio!(i64: Copy);
+    impl_pow_for_ratio!(u8: Copy);
+    impl_pow_for_ratio!(u16: Copy);
+    impl_pow_for_ratio!(u32: Copy);
+    impl_pow_for_ratio!(u64: Copy);
 
-impl_pow_for_ratio!(BigInt);
-impl_pow_for_ratio!(BigUint);
+    #[cfg(feature = "big-int")]
+    impl_pow_for_ratio!(BigInt);
+    #[cfg(feature = "big-int")]
+    impl_pow_for_ratio!(BigUint);
+}
 
+#[cfg(feature = "complex")]
 macro_rules! impl_powu8_for_complex {
     ($t: ty: Copy) => {
         impl Square for Complex<$t> {
@@ -376,26 +399,44 @@ macro_rules! impl_powu8_for_complex {
     };
 }
 
-impl_powu8_for_complex!(BigInt);
-impl_powu8_for_complex!(i8);
-impl_powu8_for_complex!(i16);
-impl_powu8_for_complex!(i32);
-impl_powu8_for_complex!(i64);
-impl_powu8_for_complex!(f32: Copy);
-impl_powu8_for_complex!(f64: Copy);
-impl_powu8_for_complex!(Ratio<BigInt>);
-impl_powu8_for_complex!(Ratio<i8>: Copy);
-impl_powu8_for_complex!(Ratio<i16>: Copy);
-impl_powu8_for_complex!(Ratio<i32>: Copy);
-impl_powu8_for_complex!(Ratio<i64>: Copy);
+#[cfg(feature = "complex")]
+mod complex {
+    use super::*;
+    use num_complex::Complex;
 
-impl_powi8_for!(Complex<f32>: Copy);
-impl_powi8_for!(Complex<f64>: Copy);
-impl_powi8_for!(Complex<Ratio<BigInt>>);
-impl_powi8_for!(Complex<Ratio<i8>>);
-impl_powi8_for!(Complex<Ratio<i16>>);
-impl_powi8_for!(Complex<Ratio<i32>>);
-impl_powi8_for!(Complex<Ratio<i64>>);
+    #[cfg(feature = "big-int")]
+    impl_powu8_for_complex!(BigInt);
+    impl_powu8_for_complex!(i8: Copy);
+    impl_powu8_for_complex!(i16: Copy);
+    impl_powu8_for_complex!(i32: Copy);
+    impl_powu8_for_complex!(i64: Copy);
+    impl_powu8_for_complex!(f32: Copy);
+    impl_powu8_for_complex!(f64: Copy);
+
+    impl_powi8_for!(Complex<f32>: Copy);
+    impl_powi8_for!(Complex<f64>: Copy);
+
+    #[cfg(feature = "ratio")]
+    mod ratio {
+        use super::*;
+        use num_complex::Complex;
+        use num_rational::Ratio;
+
+        #[cfg(feature = "big-int")]
+        impl_powu8_for_complex!(Ratio<BigInt>);
+        #[cfg(feature = "big-int")]
+        impl_powi8_for!(Complex<Ratio<BigInt>>);
+
+        impl_powu8_for_complex!(Ratio<i8>: Copy);
+        impl_powu8_for_complex!(Ratio<i16>: Copy);
+        impl_powu8_for_complex!(Ratio<i32>: Copy);
+        impl_powu8_for_complex!(Ratio<i64>: Copy);
+        impl_powi8_for!(Complex<Ratio<i8>>: Copy);
+        impl_powi8_for!(Complex<Ratio<i16>>: Copy);
+        impl_powi8_for!(Complex<Ratio<i32>>: Copy);
+        impl_powi8_for!(Complex<Ratio<i64>>: Copy);
+    }
+}
 
 macro_rules! const_powi_for {
     ($t: ty) => {
@@ -414,7 +455,11 @@ macro_rules! const_powi_for {
                 }
                 base *= base;
             }
-            if recip { 1.0 / mul } else { mul }
+            if recip {
+                1.0 / mul
+            } else {
+                mul
+            }
         }
     };
 }
@@ -430,9 +475,11 @@ pub mod f64_const {
 
 #[cfg(test)]
 mod test {
-    use num_traits::Pow;
+
+    extern crate std;
 
     use super::*;
+    use std::format;
 
     macro_rules! assert_close {
         ($this:expr, $that:expr, $d:literal) => {
@@ -466,6 +513,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature = "big-int")]
     fn big_int_powu8() {
         for base in [2, -3, 5, -8] {
             let base = BigInt::from(base);
@@ -477,11 +525,22 @@ mod test {
     }
 
     #[test]
-    fn ratio_powu8() {
+    #[cfg(feature = "ratio")]
+    fn i32_ratio_powu8() {
+        for (numer, denom) in [(1, 2), (-3, 4), (5, 4), (-2, 1)] {
+            let base = num_rational::Ratio::new(numer, denom);
+            let exp = 6;
+            let solution = (&base).pow(exp as i32);
+            assert_eq!(solution, (&base).powu8(exp));
+        }
+    }
+    #[test]
+    #[cfg(all(feature = "big-int", feature = "ratio"))]
+    fn big_ratio_powu8() {
         for base in [(1, 2), (-3, 4), (5, 4), (-2, 1)] {
             let numer = BigInt::from(base.0);
             let denom = BigInt::from(base.1);
-            let base = Ratio::new(numer, denom);
+            let base = num_rational::Ratio::new(numer, denom);
             for exp in 0..=255 {
                 let solution = (&base).pow(exp as i32);
                 assert_eq!(solution, (&base).powu8(exp));
@@ -490,7 +549,43 @@ mod test {
     }
 
     #[test]
-    fn complex_ratio_powu8() {
+    #[cfg(feature = "complex")]
+    fn complex_powi8() {
+        use num_complex::Complex;
+        use num_traits::Pow;
+        for (re, im) in [(0.5f64, -0.75), (1.25, -2.0)] {
+            let base = Complex::new(re, im);
+            for exp in -128..=127 {
+                let result = (&base).powi8(exp);
+                let solution = (&base).pow(exp as i32);
+                assert_close!(solution, result, 10);
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(all(feature = "complex", feature = "ratio"))]
+    fn i32_complex_ratio_powu8() {
+        use num_complex::Complex;
+        use num_rational::Ratio;
+        use num_traits::Pow;
+        for (re, im) in [((1, 2), (-3, 4)), ((5, 4), (-2, 1))] {
+            let re = Ratio::from(re);
+            let im = Ratio::from(im);
+            let base = Complex::new(re, im);
+            let exp = 6;
+            let result = (&base).powu8(exp);
+            let solution = (&base).pow(exp as i32);
+            assert_eq!(solution, result);
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "num")]
+    fn big_complex_ratio_powu8() {
+        use num_complex::Complex;
+        use num_rational::Ratio;
+        use num_traits::Pow;
         for (re, im) in [((1, 2), (-3, 4)), ((5, 4), (-2, 1))] {
             let (numer, denom) = re;
             let re = Ratio::new(BigInt::from(numer), BigInt::from(denom));
