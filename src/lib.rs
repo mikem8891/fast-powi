@@ -123,7 +123,8 @@ pub trait PowI8: PowU8 {
 }
 
 macro_rules! forward_ref_pow {
-    (impl $imp:ident, $method:ident($($arg:ident: $arg_ty:ty),*) for $b:ty) => {
+    (impl $imp:ident, $method:ident($($arg:ident: $arg_ty:ty),*) for $b:ty $(, $features:literal)?) => {
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl $imp for &$b {
             #[inline]
             fn $method(self $(, $arg : $arg_ty)*) -> $b {
@@ -135,7 +136,8 @@ macro_rules! forward_ref_pow {
 
 #[cfg(feature = "big-int")]
 macro_rules! forward_owned_pow {
-    (impl $imp:ident, $method:ident($($arg:ident: $arg_ty:ty),*) for $b:ty) => {
+    (impl $imp:ident, $method:ident($($arg:ident: $arg_ty:ty),*) for $b:ty $(, $features:literal)?) => {
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl $imp for $b {
             #[inline]
             fn $method(self $(, $arg : $arg_ty)*) -> $b {
@@ -146,22 +148,25 @@ macro_rules! forward_owned_pow {
 }
 
 macro_rules! impl_powu8_for {
-    ($t: ty) => {
-        forward_owned_pow!(impl Square, sq() for $t);
-        forward_owned_pow!(impl Cube, cb() for $t);
-        forward_owned_pow!(impl PowU8, powu8(exp: u8) for $t);
+    ($t: ty $(, $features:literal)?) => {
+        forward_owned_pow!(impl Square, sq() for $t $(, $features)?);
+        forward_owned_pow!(impl Cube, cb() for $t $(, $features)?);
+        forward_owned_pow!(impl PowU8, powu8(exp: u8) for $t $(, $features)?);
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl Square for &$t {
             #[inline]
             fn sq(self) -> $t {
                 self * self
             }
         }
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl Cube for &$t {
             #[inline]
             fn cb(self) -> $t {
                 self * self * self
             }
         }
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl PowU8 for &$t {
             #[inline]
             fn powu8(self, exp: u8) -> $t {
@@ -170,19 +175,22 @@ macro_rules! impl_powu8_for {
             }
         }
     };
-    ($t: ty: Copy) => {
+    ($t:ty: Copy $(, $features:literal)?) => {
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl Square for $t {
             #[inline]
             fn sq(self) -> $t {
                 self * self
             }
         }
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl Cube for $t {
             #[inline]
             fn cb(self) -> $t {
                 self * self * self
             }
         }
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl PowU8 for $t {
             #[inline]
             fn powu8(self, exp: u8) -> $t {
@@ -190,16 +198,16 @@ macro_rules! impl_powu8_for {
                 unsafe { POW.get_unchecked(exp as usize)(self) }
             }
         }
-        forward_ref_pow!(impl Square, sq() for $t);
-        forward_ref_pow!(impl Cube, cb() for $t);
-        forward_ref_pow!(impl PowU8, powu8(exp: u8) for $t);
+        forward_ref_pow!(impl Square, sq() for $t $(, $features)?);
+        forward_ref_pow!(impl Cube, cb() for $t $(, $features)?);
+        forward_ref_pow!(impl PowU8, powu8(exp: u8) for $t $(, $features)?);
     };
 }
 
 #[cfg(feature = "big-int")]
-impl_powu8_for!(BigInt);
+impl_powu8_for!(BigInt, "`big-int` or `num`");
 #[cfg(feature = "big-int")]
-impl_powu8_for!(BigUint);
+impl_powu8_for!(BigUint, "`big-int` or `num`");
 
 impl_powu8_for!(f32: Copy);
 impl_powu8_for!(f64: Copy);
@@ -213,7 +221,8 @@ impl_powu8_for!(u32: Copy);
 impl_powu8_for!(u64: Copy);
 
 macro_rules! impl_powi8_for {
-    ($t: ty: Copy) => {
+    ($t: ty: Copy $(, $features:literal)?) => {
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl PowI8 for $t {
             #[inline]
             fn powi8(self, exp: i8) -> $t {
@@ -221,10 +230,11 @@ macro_rules! impl_powi8_for {
                 unsafe { POW.get_unchecked(exp as u8 as usize)(self) }
             }
         }
-        forward_ref_pow!(impl PowI8, powi8(exp: i8) for $t);
+        forward_ref_pow!(impl PowI8, powi8(exp: i8) for $t $(, $features)?);
     };
-    ($t: ty) => {
-        forward_owned_pow!(impl PowI8, powi8(exp: i8) for $t);
+    ($t: ty $(, $features:literal)?) => {
+        forward_owned_pow!(impl PowI8, powi8(exp: i8) for $t $(, $features)?);
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl PowI8 for &$t {
             #[inline]
             fn powi8(self, exp: i8) -> $t {
@@ -240,28 +250,32 @@ impl_powi8_for!(f64: Copy);
 
 #[cfg(feature = "ratio")]
 macro_rules! impl_pow_for_ratio {
-    ($t: ty: Copy) => {
+    ($t: ty: Copy $(, $features:literal)?) => {
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl Square for Ratio<$t> {
             #[inline]
             fn sq(self) -> Ratio<$t> {
                 Ratio::new_raw(self.numer().sq(), self.denom().sq())
             }
         }
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl Cube for Ratio<$t> {
             #[inline]
             fn cb(self) -> Ratio<$t> {
                 Ratio::new_raw(self.numer().cb(), self.denom().cb())
             }
         }
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl PowU8 for Ratio<$t> {
             #[inline]
             fn powu8(self, exp: u8) -> Ratio<$t> {
                 Ratio::new_raw(self.numer().powu8(exp), self.denom().powu8(exp))
             }
         }
-        forward_ref_pow!(impl Square, sq() for Ratio<$t>);
-        forward_ref_pow!(impl Cube, cb() for Ratio<$t>);
-        forward_ref_pow!(impl PowU8, powu8(exp: u8) for Ratio<$t>);
+        forward_ref_pow!(impl Square, sq() for Ratio<$t> $(, $features)?);
+        forward_ref_pow!(impl Cube, cb() for Ratio<$t> $(, $features)?);
+        forward_ref_pow!(impl PowU8, powu8(exp: u8) for Ratio<$t> $(, $features)?);
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl PowI8 for Ratio<$t> {
             #[inline]
             fn powi8(self, exp: i8) -> <Self as Mul>::Output {
@@ -271,31 +285,35 @@ macro_rules! impl_pow_for_ratio {
                 if recip { pow.inv() } else { pow }
             }
         }
-        forward_ref_pow!(impl PowI8, powi8(exp: i8) for Ratio<$t>);
+        forward_ref_pow!(impl PowI8, powi8(exp: i8) for Ratio<$t> $(, $features)?);
     };
-    ($t: ty) => {
-        forward_owned_pow!(impl Square, sq() for Ratio<$t>);
-        forward_owned_pow!(impl Cube, cb() for Ratio<$t>);
-        forward_owned_pow!(impl PowU8, powu8(exp: u8) for Ratio<$t>);
+    ($t: ty $(, $features:literal)?) => {
+        forward_owned_pow!(impl Square, sq() for Ratio<$t> $(, $features)?);
+        forward_owned_pow!(impl Cube, cb() for Ratio<$t> $(, $features)?);
+        forward_owned_pow!(impl PowU8, powu8(exp: u8) for Ratio<$t> $(, $features)?);
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl Square for &Ratio<$t> {
             #[inline]
             fn sq(self) -> Ratio<$t> {
                 Ratio::new_raw(self.numer().sq(), self.denom().sq())
             }
         }
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl Cube for &Ratio<$t> {
             #[inline]
             fn cb(self) -> Ratio<$t> {
                 Ratio::new_raw(self.numer().cb(), self.denom().cb())
             }
         }
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl PowU8 for &Ratio<$t> {
             #[inline]
             fn powu8(self, exp: u8) -> Ratio<$t> {
                 Ratio::new_raw(self.numer().powu8(exp), self.denom().powu8(exp))
             }
         }
-        forward_owned_pow!(impl PowI8, powi8(exp: i8) for Ratio<$t>);
+        forward_owned_pow!(impl PowI8, powi8(exp: i8) for Ratio<$t> $(, $features)?);
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl PowI8 for &Ratio<$t> {
             #[inline]
             fn powi8(self, exp: i8) -> <Self as Mul>::Output {
@@ -312,24 +330,25 @@ macro_rules! impl_pow_for_ratio {
 mod ratio {
     use super::*;
     use num_rational::Ratio;
-    impl_pow_for_ratio!(i8: Copy);
-    impl_pow_for_ratio!(i16: Copy);
-    impl_pow_for_ratio!(i32: Copy);
-    impl_pow_for_ratio!(i64: Copy);
-    impl_pow_for_ratio!(u8: Copy);
-    impl_pow_for_ratio!(u16: Copy);
-    impl_pow_for_ratio!(u32: Copy);
-    impl_pow_for_ratio!(u64: Copy);
+    impl_pow_for_ratio!(i8: Copy, "`ratio` or `num`");
+    impl_pow_for_ratio!(i16: Copy, "`ratio` or `num`");
+    impl_pow_for_ratio!(i32: Copy, "`ratio` or `num`");
+    impl_pow_for_ratio!(i64: Copy, "`ratio` or `num`");
+    impl_pow_for_ratio!(u8: Copy, "`ratio` or `num`");
+    impl_pow_for_ratio!(u16: Copy, "`ratio` or `num`");
+    impl_pow_for_ratio!(u32: Copy, "`ratio` or `num`");
+    impl_pow_for_ratio!(u64: Copy, "`ratio` or `num`");
 
     #[cfg(feature = "big-int")]
-    impl_pow_for_ratio!(BigInt);
+    impl_pow_for_ratio!(BigInt, "`big-int` and `ratio`, or `num`");
     #[cfg(feature = "big-int")]
-    impl_pow_for_ratio!(BigUint);
+    impl_pow_for_ratio!(BigUint, "`big-int` and `ratio`, or `num`");
 }
 
 #[cfg(feature = "complex")]
 macro_rules! impl_powu8_for_complex {
-    ($t: ty: Copy) => {
+    ($t: ty: Copy $(, $features:literal)?) => {
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl Square for Complex<$t> {
             /// (a + bi)² = (a² - b²) + 2ab i
             #[inline]
@@ -340,6 +359,7 @@ macro_rules! impl_powu8_for_complex {
                 Complex { re, im }
             }
         }
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl Cube for Complex<$t> {
             /// (a + bi)³ = a(a² - 3b²) + b(3a² - b²) i
             #[inline]
@@ -352,6 +372,7 @@ macro_rules! impl_powu8_for_complex {
                 Complex { re, im }
             }
         }
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl PowU8 for Complex<$t> {
             #[inline]
             fn powu8(self, exp: u8) -> Complex<$t> {
@@ -359,14 +380,15 @@ macro_rules! impl_powu8_for_complex {
                 unsafe { POW.get_unchecked(exp as usize)(self) }
             }
         }
-        forward_ref_pow!(impl Square, sq() for Complex<$t>);
-        forward_ref_pow!(impl Cube, cb() for Complex<$t>);
-        forward_ref_pow!(impl PowU8, powu8(exp: u8) for Complex<$t>);
+        forward_ref_pow!(impl Square, sq() for Complex<$t> $(, $features)?);
+        forward_ref_pow!(impl Cube, cb() for Complex<$t> $(, $features)?);
+        forward_ref_pow!(impl PowU8, powu8(exp: u8) for Complex<$t> $(, $features)?);
     };
-    ($t: ty) => {
-        forward_owned_pow!(impl Square, sq() for Complex<$t>);
-        forward_owned_pow!(impl Cube, cb() for Complex<$t>);
-        forward_owned_pow!(impl PowU8, powu8(exp: u8) for Complex<$t>);
+    ($t: ty $(, $features:literal)?) => {
+        forward_owned_pow!(impl Square, sq() for Complex<$t> $(, $features)?);
+        forward_owned_pow!(impl Cube, cb() for Complex<$t> $(, $features)?);
+        forward_owned_pow!(impl PowU8, powu8(exp: u8) for Complex<$t> $(, $features)?);
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl Square for &Complex<$t> {
             /// (a + bi)² = (a² - b²) + 2ab i
             #[inline]
@@ -377,6 +399,7 @@ macro_rules! impl_powu8_for_complex {
                 Complex { re, im }
             }
         }
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl Cube for &Complex<$t> {
             /// (a + bi)³ = a(a² - 3b²) + b(3a² - b²) i
             #[inline]
@@ -389,6 +412,7 @@ macro_rules! impl_powu8_for_complex {
                 Complex { re, im }
             }
         }
+        $(#[doc = concat!("Implement using the following features: ", $features)])?
         impl PowU8 for &Complex<$t> {
             #[inline]
             fn powu8(self, exp: u8) -> Complex<$t> {
@@ -405,16 +429,16 @@ mod complex {
     use num_complex::Complex;
 
     #[cfg(feature = "big-int")]
-    impl_powu8_for_complex!(BigInt);
-    impl_powu8_for_complex!(i8: Copy);
-    impl_powu8_for_complex!(i16: Copy);
-    impl_powu8_for_complex!(i32: Copy);
-    impl_powu8_for_complex!(i64: Copy);
-    impl_powu8_for_complex!(f32: Copy);
-    impl_powu8_for_complex!(f64: Copy);
+    impl_powu8_for_complex!(BigInt, "`big-int` and `complex`, or `num`");
+    impl_powu8_for_complex!(i8: Copy, "`complex`, or `num`");
+    impl_powu8_for_complex!(i16: Copy, "`complex`, or `num`");
+    impl_powu8_for_complex!(i32: Copy, "`complex`, or `num`");
+    impl_powu8_for_complex!(i64: Copy, "`complex`, or `num`");
+    impl_powu8_for_complex!(f32: Copy, "`complex`, or `num`");
+    impl_powu8_for_complex!(f64: Copy, "`complex`, or `num`");
 
-    impl_powi8_for!(Complex<f32>: Copy);
-    impl_powi8_for!(Complex<f64>: Copy);
+    impl_powi8_for!(Complex<f32>: Copy, "`complex`, or `num`");
+    impl_powi8_for!(Complex<f64>: Copy, "`complex`, or `num`");
 
     #[cfg(feature = "ratio")]
     mod ratio {
@@ -423,18 +447,18 @@ mod complex {
         use num_rational::Ratio;
 
         #[cfg(feature = "big-int")]
-        impl_powu8_for_complex!(Ratio<BigInt>);
+        impl_powu8_for_complex!(Ratio<BigInt>, "`big-int` and `complex` and `ratio`, or `num`");
         #[cfg(feature = "big-int")]
-        impl_powi8_for!(Complex<Ratio<BigInt>>);
+        impl_powi8_for!(Complex<Ratio<BigInt>>, "`big-int` and `complex` and `ratio`, or `num`");
 
-        impl_powu8_for_complex!(Ratio<i8>: Copy);
-        impl_powu8_for_complex!(Ratio<i16>: Copy);
-        impl_powu8_for_complex!(Ratio<i32>: Copy);
-        impl_powu8_for_complex!(Ratio<i64>: Copy);
-        impl_powi8_for!(Complex<Ratio<i8>>: Copy);
-        impl_powi8_for!(Complex<Ratio<i16>>: Copy);
-        impl_powi8_for!(Complex<Ratio<i32>>: Copy);
-        impl_powi8_for!(Complex<Ratio<i64>>: Copy);
+        impl_powu8_for_complex!(Ratio<i8>: Copy, "`complex` and `ratio`, or `num`");
+        impl_powu8_for_complex!(Ratio<i16>: Copy, "`complex` and `ratio`, or `num`");
+        impl_powu8_for_complex!(Ratio<i32>: Copy, "`complex` and `ratio`, or `num`");
+        impl_powu8_for_complex!(Ratio<i64>: Copy, "`complex` and `ratio`, or `num`");
+        impl_powi8_for!(Complex<Ratio<i8>>: Copy, "`complex` and `ratio`, or `num`");
+        impl_powi8_for!(Complex<Ratio<i16>>: Copy, "`complex` and `ratio`, or `num`");
+        impl_powi8_for!(Complex<Ratio<i32>>: Copy, "`complex` and `ratio`, or `num`");
+        impl_powi8_for!(Complex<Ratio<i64>>: Copy, "`complex` and `ratio`, or `num`");
     }
 }
 
